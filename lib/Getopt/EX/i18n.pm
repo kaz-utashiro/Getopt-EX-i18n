@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
 =encoding utf-8
 
@@ -208,7 +208,7 @@ sub finalize {
 	$locale =~ /^(?<lang>\w\w)_(?<cc>\w\w)$/ or next;
 	my($lang, $cc) = @+{qw(lang cc)};;
 	my @list;
-	push @list, $locale     if $opt{raw};
+	push @list, "$locale"   if $opt{raw};
 	push @list, "$lang-$cc" if $opt{dash};
 	push @list, "$lang$cc"  if $opt{long};
 	$cc = lc $cc;

@@ -217,13 +217,18 @@ my %opthash;
 package LocaleObj {
     use Moo;
     has locale => (
-	is => 'ro', required => 1,
+	is => 'ro',
+	required => 1,
 	isa => sub { $_[0] =~ /^.._..$/ or die "fomat error" },
 	);
-    has [ qw(lang cc) ]  => (is => 'lazy');
-    no Moo;
-    sub _build_lang { substr +shift->locale, 0, 2 }
-    sub _build_cc   { substr +shift->locale, 3, 2 }
+    has lang => (
+	is => 'lazy',
+	builder => sub { substr +shift->locale, 0, 2 },
+	);
+    has cc => (
+	is => 'lazy',
+	builder => sub { substr +shift->locale, 3, 2 },
+	);
 }
 
 sub finalize {

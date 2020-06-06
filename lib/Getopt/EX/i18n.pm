@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-our $VERSION = "0.03";
+our $VERSION = "0.04";
 
 =encoding utf-8
 
@@ -214,6 +214,18 @@ my %lang;
 my %cc;
 my %opthash;
 
+package LocaleObj {
+    use Moo;
+    has locale => (
+	is => 'ro', required => 1,
+	isa => sub { $_[0] =~ /^.._..$/ or die "fomat error" },
+	);
+    has [ qw(lang cc) ]  => (is => 'lazy');
+    no Moo;
+    sub _build_lang { substr +shift->locale, 0, 2 }
+    sub _build_cc   { substr +shift->locale, 3, 2 }
+}
+
 sub finalize {
     my($obj, $argv) = @_;
     for my $locale (sort @locale) {
@@ -237,7 +249,7 @@ sub finalize {
 	    }
 	}
 	for (@list) {
-	    $opthash{$_} = $locale;
+	    $opthash{$_} = LocaleObj->new(locale => $locale);
 	}
     }
 
@@ -261,15 +273,22 @@ sub options {
 	show => 0, # print option
 	exit => 0, # exit at the end
 	@_);
-    my $optwidth = length($opt{prefix}) + 5;
-    for my $opt (sort { lc $a cmp lc $b } keys %opthash) {
+    my @keys = do {
+	map  { $_->[0] }
+	sort { $a->[1] cmp $b->[1] || $a->[0] cmp $b->[0] }
+	map  { [ $_, $opthash{$_}->cc ] }
+	keys %opthash;
+    };
+    for my $opt (@keys) {
 	my $option = $opt{prefix} . $opt;
-	my $call = "&setenv(LANG=$opthash{$opt})";
+	my $locale = $opthash{$opt}->locale;
+	my $call = "&setenv(LANG=$locale)";
 	$module->setopt($option, $call) if $arg{set};
 	if ($arg{show}) {
-	    my($lang, $cc) = localeinfo($opthash{$opt});
+	    my($lang, $cc) = localeinfo($opthash{$opt}->locale);
 	    printf "option %-*s %s # %s / %s\n",
-		$optwidth, $option, $call, $lang, $cc;
+		(state $optwidth = length($opt{prefix}) + length($locale)),
+		$option, $call, $lang, $cc;
 	}
     }
     exit if $arg{exit};

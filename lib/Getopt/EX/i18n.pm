@@ -184,9 +184,6 @@ Kazumasa Utashiro E<lt>kaz@utashiro.comE<gt>
 
 =cut
 
-use Getopt::EX::i18n::iso3361 qw(%iso3361);
-use Getopt::EX::i18n::iso639 qw(%iso639);
-
 my %opt = (
     raw     => 1,
     dash    => 1,
@@ -216,19 +213,16 @@ my %opthash;
 
 package LocaleObj {
     use Moo;
-    has locale => (
-	is => 'ro',
-	required => 1,
-	isa => sub { $_[0] =~ /^.._..$/ or die "fomat error" },
-	);
-    has lang => (
-	is => 'lazy',
-	builder => sub { substr +shift->locale, 0, 2 },
-	);
-    has cc => (
-	is => 'lazy',
-	builder => sub { substr +shift->locale, 3, 2 },
-	);
+    has [ qw(name lang cc) ] => (is => 'ro', required => 1);
+    sub create {
+	my $class = shift;
+	$_[0] =~ /^(([a-z][a-z])_([A-Z][A-Z]))$/ or die;
+	$class->new(name => $1, lang => $2, cc => $3);
+    }
+    use Getopt::EX::i18n::iso639 qw(%iso639);
+    use Getopt::EX::i18n::iso3361 qw(%iso3361);
+    sub lang_name { $iso639 {+shift->lang} || 'UNKNOWN' }
+    sub cc_name   { $iso3361{+shift->cc}   || 'UNKNOWN' }
 }
 
 sub finalize {
@@ -254,7 +248,7 @@ sub finalize {
 	    }
 	}
 	for (@list) {
-	    $opthash{$_} = LocaleObj->new(locale => $locale);
+	    $opthash{$_} = LocaleObj->create($locale);
 	}
     }
 
@@ -264,12 +258,6 @@ sub finalize {
     }
     &options(set => 1, show => $opt{list});
     return;
-}
-
-sub localeinfo {
-    $_[0]=~ /^(?<lang>[a-z][a-z])_(?<cc>[A-Z][A-Z])$/;
-    ( $+{lang} && $iso639{$+{lang}} || 'UNKNOWN' ,
-      $+{cc}   && $iso3361{$+{cc}}  || 'UNKNOWN' );
 }
 
 sub options {
@@ -285,15 +273,16 @@ sub options {
 	keys %opthash;
     };
     for my $opt (@keys) {
+	my $locale = $opthash{$opt};
 	my $option = $opt{prefix} . $opt;
-	my $locale = $opthash{$opt}->locale;
-	my $call = "&setenv(LANG=$locale)";
+	my $name = $locale->name;
+	my $call = "&setenv(LANG=$name)";
 	$module->setopt($option, $call) if $arg{set};
 	if ($arg{show}) {
-	    my($lang, $cc) = localeinfo($opthash{$opt}->locale);
 	    printf "option %-*s %s # %s / %s\n",
-		(state $optwidth = length($opt{prefix}) + length($locale)),
-		$option, $call, $lang, $cc;
+		(state $optwidth = length($opt{prefix}) + length($name)),
+		$option, $call,
+		$locale->lang_name, $locale->cc_name;
 	}
     }
     exit if $arg{exit};
@@ -325,8 +314,9 @@ sub setenv {
     while (@_ >= 2) {
 	my($key, $value) = splice @_, 0, 2;
 	if ($opt{verbose}) {
-	    my($lang, $cc) = localeinfo $value;
-	    warn "$key=$value ($lang / $cc)\n";
+	    my $l = LocaleObj->create($value);
+	    warn sprintf("%s=%s (%s / %s)\n",
+			 $key, $value, $l->lang_name, $l->cc_name);
 	}
 	$ENV{$key} = $value;
     }

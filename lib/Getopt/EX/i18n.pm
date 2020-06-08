@@ -269,7 +269,8 @@ sub options {
 	@_);
     my @keys = do {
 	map  { $_->[0] }
-	sort { $a->[1] cmp $b->[1] || $a->[0] cmp $b->[0] }
+	sort { $a->[1] cmp $b->[1] ||
+	       lc $a->[0] cmp lc $b->[0] || $a->[0] cmp $b->[0] }
 	map  { [ $_, $opthash{$_}->cc ] }
 	keys %opthash;
     };

@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-our $VERSION = "0.05";
+our $VERSION = "0.06";
 
 =encoding utf-8
 
@@ -83,10 +83,10 @@ default, and set C<LANG> environment as C<ja_JP>.
     LOCALE:   --ja_JP  (raw)
               --ja-JP  (dash)
               --jaJP   (long)
-              --jajp   (lclong)
+              --jajp   (long_lc)
     LANGUAGE: --ja     (lang)
     COUNTRY:  --JP     (country)
-              --jp     (country)
+              --jp     (country_lc)
 
 Short language option (C<--ja>) is defined in the alphabetical order
 of the country code, so the option C<--en> is assigned to C<en_AU>.
@@ -116,18 +116,20 @@ module declaration.
 
 =item B<long>
 
-=item B<lclong>
+=item B<long_lc>
 
 =item B<lang>
 
 =item B<country>
 
+=item B<country_lc>
+
 These parameter tells which option is defined.  All options are
 enabled by default.  You can disable country option like this:
 
-    command -Mi18n::setopt(country=0)
+    command -Mi18n::setopt(country=0,country_lc=0)
 
-    command -Mi18n::setopt=country=0
+    command -Mi18n::setopt=country=0,country_lc=0
 
 =item B<verbose>
 
@@ -185,16 +187,17 @@ Kazumasa Utashiro E<lt>kaz@utashiro.comE<gt>
 =cut
 
 my %opt = (
-    raw     => 1,
-    dash    => 1,
-    long    => 1,
-    lclong  => 1,
-    lang    => 1,
-    country => 1,
-    verbose => 0,
-    list    => 0,
-    prefix  => '--',
-    listopt => undef,
+    raw        => 1,
+    dash       => 1,
+    long       => 1,
+    long_lc    => 1,
+    lang       => 1,
+    country    => 1,
+    country_lc => 1,
+    verbose    => 0,
+    list       => 0,
+    prefix     => '--',
+    listopt    => undef,
     );
 
 my $module;
@@ -235,17 +238,15 @@ sub finalize {
 	push @list, "$lang-$cc" if $opt{dash};
 	push @list, "$lang$cc"  if $opt{long};
 	$cc = lc $cc;
-	push @list, "$lang$cc"  if $opt{lclong};
+	push @list, "$lang$cc"  if $opt{long_lc};
 	if ($opt{lang}) {
 	    if (!$opthash{$lang} or $lang eq $cc) {
 		push @list, $lang;
 	    }
 	}
-	if ($opt{country}) {
-	    if ($lang eq $cc or @{$cc{$cc}} == 1) {
-		push @list, uc $cc;
-		push @list, $cc if not $lang{$cc};
-	    }
+	if ($lang eq $cc or @{$cc{$cc}} == 1) {
+	    push @list, uc $cc if $opt{country};
+	    push @list,    $cc if $opt{country_lc} and !$lang{$cc};
 	}
 	for (@list) {
 	    $opthash{$_} = LocaleObj->create($locale);
@@ -282,7 +283,7 @@ sub options {
 	    printf "option %-*s %s # %s / %s\n",
 		(state $optwidth = length($opt{prefix}) + length($name)),
 		$option, $call,
-		$locale->lang_name, $locale->cc_name;
+		$locale->cc_name, $locale->lang_name;
 	}
     }
     exit if $arg{exit};

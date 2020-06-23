@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-our $VERSION = "0.06";
+our $VERSION = "0.07";
 
 =encoding utf-8
 
@@ -156,11 +156,19 @@ Specify prefix string.  Default is C<-->.
 
 =back
 
+=head1 BUGS
+
+Support only UTF-8.
+
 =head1 SEE ALSO
 
 =over 7
 
-=item B<optex>
+=item L<Getopt::EX>
+
+L<https://github.com/kaz-utashiro/Getopt-EX>
+
+=item L<optex|App::optex>
 
 You can execute arbitrary command on the system getting the benefit of
 B<Getopt::EX> using B<optex>.
@@ -210,17 +218,18 @@ sub initialize {
 }
 
 my @locale;
+my %locale;
 my %lang;
 my %cc;
 my %opthash;
 
 package LocaleObj {
     use Moo;
-    has [ qw(name lang cc) ] => (is => 'ro', required => 1);
+    has [ my @member = qw(name lang cc) ] => (is => 'ro', required => 1);
     sub create {
-	my $class = shift;
-	$_[0] =~ /^(([a-z][a-z])_([A-Z][A-Z]))$/ or die;
-	$class->new(name => $1, lang => $2, cc => $3);
+	(my $class, local $_) = @_;
+	/^(?<name>(?<lang>[a-z][a-z])_(?<cc>[A-Z][A-Z]))/ or die;
+	new $class map { $_ => $+{$_} // '' } @member;
     }
     use Getopt::EX::i18n::iso639 qw(%iso639);
     use Getopt::EX::i18n::iso3361 qw(%iso3361);
@@ -275,16 +284,17 @@ sub options {
 	keys %opthash;
     };
     for my $opt (@keys) {
-	my $locale = $opthash{$opt};
+	my $obj = $opthash{$opt};
 	my $option = $opt{prefix} . $opt;
-	my $name = $locale->name;
-	my $call = "&setenv(LANG=$name)";
+	my $name = $obj->name;
+	my $locale = $locale{$name};
+	my $call = "&setenv(LANG=$locale)";
 	$module->setopt($option, $call) if $arg{set};
 	if ($arg{show}) {
 	    printf "option %-*s %s # %s / %s\n",
 		(state $optwidth = length($opt{prefix}) + length($name)),
 		$option, $call,
-		$locale->cc_name, $locale->lang_name;
+		$obj->cc_name, $obj->lang_name;
 	}
     }
     exit if $arg{exit};
@@ -295,8 +305,14 @@ sub setup {
     return if state $called++;
     grep { -x "$_/locale" } split /:/, $ENV{PATH} or return;
     for (`locale -a`) {
-	/^((\w\w)_(\w\w))$/ or next;
+	chomp;
+	/^(([a-z][a-z])_([A-Z][A-Z]))(?=(?i:$|\.utf))/ or next;
 	my($name, $lang, $cc) = ($1, $2, lc $3);
+	if (my $last = $locale{$name}) {
+	    $locale{$name} = $_ if length($_) < length($last);
+	    next;
+	}
+	$locale{$name} = $_;
 	push @locale,           $name;
 	push @{ $lang{$lang} }, $name;
 	push @{ $cc{$cc}     }, $name;

@@ -136,9 +136,17 @@ module declaration.
 
     Specify prefix string.  Default is `--`.
 
+# BUGS
+
+Support only UTF-8.
+
 # SEE ALSO
 
-- **optex**
+- [Getopt::EX](https://metacpan.org/pod/Getopt::EX)
+
+    [https://github.com/kaz-utashiro/Getopt-EX](https://github.com/kaz-utashiro/Getopt-EX)
+
+- [optex](https://metacpan.org/pod/App::optex)
 
     You can execute arbitrary command on the system getting the benefit of
     **Getopt::EX** using **optex**.

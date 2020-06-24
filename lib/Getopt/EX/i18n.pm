@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use Data::Dumper;
 
-our $VERSION = "0.07";
+our $VERSION = "0.08";
 
 =encoding utf-8
 
@@ -80,25 +80,25 @@ available on macOS 10.15 (Catalina).
 As for Japanese locale C<ja_JP>, following options are defined by
 default, and set C<LANG> environment as C<ja_JP>.
 
-    LOCALE:   --ja_JP  (raw)
-              --ja-JP  (dash)
-              --jaJP   (long)
-              --jajp   (long_lc)
-    LANGUAGE: --ja     (lang)
-    COUNTRY:  --JP     (country)
-              --jp     (country_lc)
+    LOCALE:     --ja_JP  (raw)
+                --ja-JP  (dash)
+                --jaJP   (long)
+                --jajp   (long_lc)
+    LANGUAGE:   --ja     (language)
+    TERRITORY:  --JP     (territory)
+                --jp     (territory_lc)
 
 Short language option (C<--ja>) is defined in the alphabetical order
-of the country code, so the option C<--en> is assigned to C<en_AU>.
-But if the same country name is found as language, it takes
+of the territory code, so the option C<--en> is assigned to C<en_AU>.
+But if the same territory name is found as language, it takes
 precedence; German is used in three locales (C<de_AT>, C<de_CH>,
 C<de_DE>) but option C<--de> is defined as C<de_DE>.
 
-Country options (C<--JP> and C<--jp>) are defined only when the same
+Territory options (C<--JP> and C<--jp>) are defined only when the same
 language option is not defined by other entry, and only single entry
-can be found for the country.  Option for Switzerland is not defined
+can be found for the territory.  Option for Switzerland is not defined
 because there are three entries (C<de_CH>, C<fr_CH>, C<it_CH>).
-Country option C<--AM> is assigned to C<hy_AM>, but language option
+Territory option C<--AM> is assigned to C<hy_AM>, but language option
 C<--am> is assigned to C<am_ET>.
 
 =head1 OPTION
@@ -120,16 +120,16 @@ module declaration.
 
 =item B<lang>
 
-=item B<country>
+=item B<territory>
 
-=item B<country_lc>
+=item B<territory_lc>
 
 These parameter tells which option is defined.  All options are
-enabled by default.  You can disable country option like this:
+enabled by default.  You can disable territory option like this:
 
-    command -Mi18n::setopt(country=0,country_lc=0)
+    command -Mi18n::setopt(territory=0,territory_lc=0)
 
-    command -Mi18n::setopt=country=0,country_lc=0
+    command -Mi18n::setopt=territory=0,territory_lc=0
 
 =item B<verbose>
 
@@ -195,17 +195,17 @@ Kazumasa Utashiro E<lt>kaz@utashiro.comE<gt>
 =cut
 
 my %opt = (
-    raw        => 1,
-    dash       => 1,
-    long       => 1,
-    long_lc    => 1,
-    lang       => 1,
-    country    => 1,
-    country_lc => 1,
-    verbose    => 0,
-    list       => 0,
-    prefix     => '--',
-    listopt    => undef,
+    raw          => 1,
+    dash         => 1,
+    long         => 1,
+    long_lc      => 1,
+    language     => 1,
+    territory    => 1,
+    territory_lc => 1,
+    verbose      => 0,
+    list         => 0,
+    prefix       => '--',
+    listopt      => undef,
     );
 
 my $module;
@@ -248,14 +248,14 @@ sub finalize {
 	push @list, "$lang$cc"  if $opt{long};
 	$cc = lc $cc;
 	push @list, "$lang$cc"  if $opt{long_lc};
-	if ($opt{lang}) {
+	if ($opt{language}) {
 	    if (!$opthash{$lang} or $lang eq $cc) {
 		push @list, $lang;
 	    }
 	}
 	if ($lang eq $cc or @{$cc{$cc}} == 1) {
-	    push @list, uc $cc if $opt{country};
-	    push @list,    $cc if $opt{country_lc} and !$lang{$cc};
+	    push @list, uc $cc if $opt{territory};
+	    push @list,    $cc if $opt{territory_lc} and !$lang{$cc};
 	}
 	for (@list) {
 	    $opthash{$_} = LocaleObj->create($locale);

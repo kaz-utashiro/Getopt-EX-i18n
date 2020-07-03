@@ -1,10 +1,8 @@
-package Getopt::EX::i18n;
-use 5.014;
-use strict;
+use v5.14;
+package Getopt::EX::i18n 0.08;
+
 use warnings;
 use Data::Dumper;
-
-our $VERSION = "0.08";
 
 =encoding utf-8
 
@@ -229,7 +227,7 @@ package LocaleObj {
     sub create {
 	(my $class, local $_) = @_;
 	/^(?<name>(?<lang>[a-z][a-z])_(?<cc>[A-Z][A-Z]))/ or die;
-	new $class map { $_ => $+{$_} // '' } @member;
+	$class->new( map { $_ => $+{$_} // '' } @member );
     }
     use Getopt::EX::i18n::iso639 qw(%iso639);
     use Getopt::EX::i18n::iso3361 qw(%iso3361);

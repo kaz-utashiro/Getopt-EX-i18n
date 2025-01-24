@@ -1,7 +1,7 @@
 use v5.14;
 package Getopt::EX::i18n;
 
-our $VERSION = '0.09';
+our $VERSION = '1.00';
 
 use warnings;
 use Data::Dumper;

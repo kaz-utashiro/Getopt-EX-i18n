@@ -1,3 +1,4 @@
+[![Actions Status](https://github.com/kaz-utashiro/Getopt-EX-i18n/workflows/test/badge.svg)](https://github.com/kaz-utashiro/Getopt-EX-i18n/actions) [![MetaCPAN Release](https://badge.fury.io/pl/Getopt-EX-i18n.svg)](https://metacpan.org/release/Getopt-EX-i18n)
 # NAME
 
 Getopt::EX::i18n - General i18n module

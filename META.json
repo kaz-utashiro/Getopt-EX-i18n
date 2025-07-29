@@ -42,8 +42,10 @@
       },
       "runtime" : {
          "requires" : {
-            "Getopt::EX" : "v1.23.3",
+            "Getopt::EX" : "v2.2.2",
             "List::Util" : "1.45",
+            "Locale::Codes::Country" : "3.84",
+            "Locale::Codes::Language" : "3.84",
             "perl" : "v5.14.0"
          }
       },

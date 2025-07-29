@@ -243,10 +243,12 @@ Local::LocaleObj {
 	/^(?<name>(?<lang>[a-z][a-z])_(?<cc>[A-Z][A-Z]))/ or die;
 	$class->new(%+);
     }
-    use Getopt::EX::i18n::iso639 qw(%iso639);
-    use Getopt::EX::i18n::iso3361 qw(%iso3361);
-    sub lang_name { $iso639 {+shift->lang} || 'UNKNOWN' }
-    sub cc_name   { $iso3361{+shift->cc}   || 'UNKNOWN' }
+
+    use Locale::Codes::Language;
+    sub lang_name { code2language(+shift->lang) || 'UNKNOWN' }
+
+    use Locale::Codes::Country;
+    sub cc_name   { code2country(+shift->cc)   || 'UNKNOWN' }
 }
 
 sub finalize {
